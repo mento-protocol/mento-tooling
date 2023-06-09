@@ -13,9 +13,13 @@
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
+    "@nomicfoundation/hardhat-foundry": "^1.0.1",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
+    "dotenv": "^16.1.4",
     "ethers": "^5.7.2",
+    "hardhat": "^2.15.0",
+    "hardhat-deploy": "^0.11.30",
     "husky": "^8.0.0",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
