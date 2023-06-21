@@ -22,3 +22,7 @@ yarn-error.log*
 # broadcasts
 !/broadcast
 /broadcast/Dev-*
+
+# hardhat
+artifacts
+cache_hardhat
