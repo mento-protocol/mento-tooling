@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
   networks: {
     localhost: {
       live: false,
-      saveDeployments: true, // Best set to false but keeping true to illustrate features
+      saveDeployments: true, // Best set to false but keeping true to illustrate features.
       tags: ["local"],
     },
     hardhat: {
@@ -75,6 +75,9 @@ const config: HardhatUserConfig = {
     ],
   },
   paths: {
+    // This value cannot be an array, so we can only compile one folder.
+    // This means that contracts, such as the PartialReserveProxy, must be moved to mento-core
+    // if we want to include them in the deployment.
     sources: "./lib/mento-core/contracts",
   },
 };
