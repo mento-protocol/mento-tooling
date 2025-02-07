@@ -22,10 +22,11 @@ interface ILockingLite {
   function paused() external view returns (bool);
 }
 
-contract MGP03Checks is GovernanceScript, Test {
+contract MGP04Checks is GovernanceScript, Test {
   using Contracts for Contracts.Cache;
 
   address public mentoLabsMultisig;
+  address public mentoGovernor;
   address public locking;
 
   function prepare() public {
@@ -40,14 +41,27 @@ contract MGP03Checks is GovernanceScript, Test {
 
     locking = governanceFactory.locking();
     require(locking != address(0), "LockingProxy address not found");
+
+    mentoGovernor = governanceFactory.mentoGovernor();
+    require(mentoGovernor != address(0), "MentoGovernor address not found");
   }
 
   function run() public {
-    console.log("\nStarting MGP03 checks:");
+    console.log("\nStarting MGP04 checks:");
     prepare();
 
+    verifyVotingPeriod();
     verifyMentoLabsMultisig();
-    verifyMentoLabsMultisigPrivileges();
+    verifyMentoLabsMultisigPriviliges();
+    verifyProposalCreation();
+  }
+
+  function verifyVotingPeriod() public view {
+    console.log("\n== Verifying voting period: ==");
+
+    uint256 expectedVotingPeriod = 300; // TODO: Change to updated period
+    require(IGovernor(mentoGovernor).votingPeriod() == expectedVotingPeriod, "Voting period is not correct");
+    console.log(unicode"🟢 Voting period is correct: %s", expectedVotingPeriod);
   }
 
   function verifyMentoLabsMultisig() public view {
@@ -57,8 +71,8 @@ contract MGP03Checks is GovernanceScript, Test {
     console.log(unicode"🟢 Mento Labs multisig is correct: %s", mentoLabsMultisig);
   }
 
-  function verifyMentoLabsMultisigPrivileges() public {
-    console.log("\n== Verifying mento labs multisig privileges: ==");
+  function verifyMentoLabsMultisigPriviliges() public {
+    console.log("\n== Verifying mento labs multisig priviliges: ==");
 
     vm.prank(mentoLabsMultisig);
     ILockingLite(locking).setL2TransitionBlock(block.number);
@@ -66,6 +80,6 @@ contract MGP03Checks is GovernanceScript, Test {
     require(ILockingLite(locking).paused(), "Locking contract is not paused");
     require(ILockingLite(locking).l2TransitionBlock() == block.number, "L2 transition block is not set");
 
-    console.log(unicode"🟢 Mento Labs multisig privileges are set correctly");
+    console.log(unicode"🟢 Mento Labs multisig priviliges are set correctly");
   }
 }

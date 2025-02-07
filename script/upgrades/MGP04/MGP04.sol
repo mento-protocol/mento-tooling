@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // solhint-disable func-name-mixedcase, contract-name-camelcase, function-max-lines, var-name-mixedcase
-pragma solidity ^0.8;
+pragma solidity 0.8.18;
 pragma experimental ABIEncoderV2;
 
 import { GovernanceScript } from "script/utils/mento/Script.sol";
@@ -11,18 +11,11 @@ import { IGovernanceFactory } from "script/interfaces/IGovernanceFactory.sol";
 import { IMentoUpgrade, ICeloGovernance } from "script/interfaces/IMentoUpgrade.sol";
 import { IGovernor } from "script/interfaces/IGovernor.sol";
 
-interface ILockingLite {
-  function setMentoLabsMultisig(address mentoLabsMultisig_) external;
-
-  function mentoLabsMultisig() external view returns (address);
-}
-
-contract MGP03 is IMentoUpgrade, GovernanceScript {
+contract MGP04 is IMentoUpgrade, GovernanceScript {
   using Contracts for Contracts.Cache;
 
   bool public hasChecks = true;
 
-  address public locking;
   address public mentoGovernor;
   IGovernanceFactory public governanceFactory;
 
@@ -37,13 +30,13 @@ contract MGP03 is IMentoUpgrade, GovernanceScript {
 
     mentoGovernor = governanceFactory.mentoGovernor();
     require(mentoGovernor != address(0), "MentoGovernor address not found");
-
-    locking = governanceFactory.locking();
-    require(locking != address(0), "Locking address not found");
   }
 
   function run() public {
     prepare();
+
+    // This proposal should only run on Alfajores
+    require(!Chain.isCelo(), "This proposal is only for Alfajores");
 
     ICeloGovernance.Transaction[] memory _transactions = buildProposal();
 
@@ -58,13 +51,16 @@ contract MGP03 is IMentoUpgrade, GovernanceScript {
   function buildProposal() public returns (ICeloGovernance.Transaction[] memory) {
     ICeloGovernance.Transaction[] memory _transactions = new ICeloGovernance.Transaction[](1);
 
-    address mentoLabsMultisig = contracts.dependency("MentoLabsMultisig");
-    require(ILockingLite(locking).mentoLabsMultisig() == address(0), "Mento Labs multisig is already set");
+    // On Alfajores, we're adjusting from 60 blocks (5s) to 300 blocks (1s) to maintain ~5 minute voting period
+    uint256 currentVotingPeriod = 60; // 5 minute period with 5s blocks
+    uint256 newVotingPeriod = 300; // 5 minute period with 1s blocks
+
+    require(IGovernor(mentoGovernor).votingPeriod() == currentVotingPeriod, "Current voting period is not correct");
 
     _transactions[0] = ICeloGovernance.Transaction(
       0,
-      locking,
-      abi.encodeWithSelector(ILockingLite.setMentoLabsMultisig.selector, mentoLabsMultisig)
+      mentoGovernor,
+      abi.encodeWithSelector(IGovernor.setVotingPeriod.selector, newVotingPeriod)
     );
 
     return _transactions;
